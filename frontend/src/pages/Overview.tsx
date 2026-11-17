@@ -60,7 +60,7 @@ export function Overview() {
       description: 'Your cloud resources, utilization and costs. One clear picture.',
       icon: Box,
       path: '/resources',
-      stage: 'STAGE 02',
+      stage: 'AVAILABLE',
     },
     {
       title: 'Smarter recommendations',
@@ -224,9 +224,9 @@ export function Overview() {
           <div className="service-row">
             <span>
               <Box size={16} />
-              Cloud integrations
+              Data collection worker
             </span>
-            <span className="muted">Not configured</span>
+            <span className="muted">{info.components.collector?.status || 'unavailable'}</span>
           </div>
         </section>
         <section className="panel next-panel">
@@ -239,7 +239,9 @@ export function Overview() {
             <div>
               <h3>Connect your infrastructure</h3>
               <p>Bring in resource and utilization data.</p>
-              <span className="planned-label">Planned · data collection</span>
+              <Link className="text-link" to="/sources">
+                Open sources & imports
+              </Link>
             </div>
           </div>
           <div className="next-step">
@@ -268,7 +270,10 @@ export function Overview() {
             </div>
             <h3>{title}</h3>
             <p>{description}</p>
-            <span className="planned-label">{stage} · PLANNED</span>
+            <span className="planned-label">
+              {stage}
+              {stage === 'AVAILABLE' ? ' · DATA COLLECTION' : ' · PLANNED'}
+            </span>
           </Link>
         ))}
       </div>

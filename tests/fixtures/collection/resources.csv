@@ -1,0 +1,3 @@
+external_id,resource_type,name,provider,namespace,cpu_capacity,memory_capacity_bytes,cpu_requests,memory_requests_bytes,cpu_limits,memory_limits_bytes
+synthetic-vm-1,virtual_machine,demo-worker,csv,,2,4294967296,,,,
+synthetic-pod-uid-1,kubernetes_pod,demo-api,kubernetes,demo,,,0.25,134217728,1,536870912

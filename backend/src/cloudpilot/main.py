@@ -6,12 +6,16 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import OperationalError, TimeoutError
 from starlette.exceptions import HTTPException
 
 from cloudpilot.api.v1.routes.system import router
 from cloudpilot.core.config import Settings
 from cloudpilot.core.logging import configure_logging
 from cloudpilot.db.database import Database
+from cloudpilot.modules.collection.api import router as collection_router
+from cloudpilot.modules.collection.connectors.base import CollectionError
+from cloudpilot.modules.collection.middleware import UploadLimitMiddleware
 from cloudpilot.schemas.system import ErrorDetail, ErrorResponse
 
 logger = logging.getLogger("cloudpilot")
@@ -50,10 +54,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_methods=["GET"],
+        allow_methods=["GET", "POST"],
         allow_headers=["Accept", "Content-Type"],
         allow_credentials=False,
     )
+
+    app.add_middleware(UploadLimitMiddleware)
 
     @app.middleware("http")
     async def request_context(request: Request, call_next):
@@ -79,5 +85,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def validation_error(request: Request, exc: RequestValidationError):
         return error_response(request, 422, "validation_error", "Invalid request")
 
+    @app.exception_handler(OperationalError)
+    @app.exception_handler(TimeoutError)
+    async def database_error(request: Request, exc):
+        return error_response(request, 503, "database_unavailable", "Database unavailable")
+
+    @app.exception_handler(CollectionError)
+    async def collection_error(request: Request, exc: CollectionError):
+        return error_response(request, exc.status, exc.code, exc.code.replace("_", " "))
+
+    app.include_router(collection_router)
     app.include_router(router)
     return app

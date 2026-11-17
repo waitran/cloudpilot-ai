@@ -68,3 +68,19 @@ def test_invalid_settings_do_not_print_credentials():
             environment="production",
         )
     assert password not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    "url", ["file:///etc/config", "http://user" + ":private@prom", "http://prom?token=private"]
+)
+def test_prometheus_endpoint_is_server_owned_and_credential_free(settings, url):
+    with pytest.raises(ValidationError) as error:
+        config(database_url=settings.database_url, prometheus_url=url)
+    assert "private" not in str(error.value)
+
+
+def test_kubeconfig_requires_an_explicit_path(settings):
+    with pytest.raises(ValidationError):
+        config(database_url=settings.database_url, kube_mode="kubeconfig")
+    result = config(database_url=settings.database_url, kube_context="", kube_config_file="")
+    assert result.kube_context is None and result.kube_config_file is None

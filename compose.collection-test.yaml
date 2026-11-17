@@ -1,0 +1,22 @@
+# Explicit synthetic integration environment. Never included by normal `docker compose up`.
+services:
+  worker:
+    environment:
+      PROMETHEUS_URL: http://prometheus:9090
+  prometheus:
+    volumes:
+      - ./tests/fixtures/collection/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  synthetic-exporter:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: [python, /app/synthetic-exporter.py]
+    volumes:
+      - ./tests/fixtures/collection/exporter.py:/app/synthetic-exporter.py:ro
+    networks: [application]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    healthcheck:
+      disable: true

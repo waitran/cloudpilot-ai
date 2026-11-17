@@ -16,7 +16,10 @@ class Database:
             pool_timeout=3,
             pool_recycle=1800,
             hide_parameters=True,
-            connect_args={"connect_timeout": 2, "options": "-c statement_timeout=2000"},
+            connect_args={
+                "connect_timeout": 2,
+                "options": "-c statement_timeout=2000 -c timezone=UTC",
+            },
         )
         self.sessions = sessionmaker(bind=self.engine, expire_on_commit=False)
 

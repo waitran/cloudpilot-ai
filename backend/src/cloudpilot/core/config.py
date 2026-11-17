@@ -18,6 +18,39 @@ class Settings(BaseSettings):
     database_url: SecretStr
     cors_origins: list[str] = ["http://localhost:15173", "http://127.0.0.1:15173"]
 
+    prometheus_url: str = ""
+    prometheus_token: SecretStr | None = None
+    kube_mode: Literal["disabled", "kubeconfig", "incluster"] = "disabled"
+    kube_config_file: str | None = None
+    kube_context: str | None = None
+
+    @field_validator("kube_config_file", "kube_context", mode="before")
+    @classmethod
+    def empty_optional(cls, value):
+        return value or None
+
+    @field_validator("prometheus_url")
+    @classmethod
+    def valid_prometheus(cls, value: str) -> str:
+        if value:
+            url = urlsplit(value)
+            if (
+                url.scheme not in {"http", "https"}
+                or not url.hostname
+                or url.username
+                or url.password
+                or url.query
+                or url.fragment
+            ):
+                raise ValueError("Use a server-owned HTTP(S) Prometheus URL without credentials")
+        return value
+
+    @model_validator(mode="after")
+    def explicit_kubeconfig(self):
+        if self.kube_mode == "kubeconfig" and not self.kube_config_file:
+            raise ValueError("KUBE_CONFIG_FILE is required in kubeconfig mode")
+        return self
+
     @field_validator("database_url")
     @classmethod
     def postgres_only(cls, value: SecretStr) -> SecretStr:

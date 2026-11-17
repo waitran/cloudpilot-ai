@@ -1,0 +1,4 @@
+external_record_id,external_resource_id,service,period_start,period_end,amount,currency,cost_type
+synthetic-bill-1,synthetic-vm-1,compute,2026-01-01T00:00:00Z,2026-01-02T00:00:00Z,0.123456789,USD,actual
+synthetic-bill-2,synthetic-vm-1,compute,2026-01-01T00:00:00Z,2026-01-02T00:00:00Z,0.2,EUR,estimated
+synthetic-bill-3,synthetic-unknown,storage,2026-01-01T00:00:00Z,2026-01-02T00:00:00Z,0.4,USD,actual

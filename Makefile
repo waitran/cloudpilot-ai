@@ -19,7 +19,7 @@ logs:
 	docker compose logs --follow --tail=100
 
 restart:
-	docker compose restart backend frontend
+	docker compose restart backend frontend worker
 
 migrate:
 	docker compose run --rm migrate
@@ -42,3 +42,4 @@ test:
 
 smoke:
 	$(PYTHON) scripts/smoke_http.py
+	$(PYTHON) scripts/smoke_collection.py

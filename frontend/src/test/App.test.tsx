@@ -70,9 +70,9 @@ describe('application workspace', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(info))));
     renderApp();
     await screen.findByText('Your foundation is ready');
-    fireEvent.click(screen.getByRole('link', { name: 'Resources' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Recommendations' }));
     expect(await screen.findByText('A little further on the horizon.')).toBeInTheDocument();
-    expect(screen.getByText('Stage 2 · Data collection')).toBeInTheDocument();
+    expect(screen.getByText('Stage 3 · Optimization engine')).toBeInTheDocument();
     expect(screen.queryByText(/\$[0-9]/)).not.toBeInTheDocument();
   });
 

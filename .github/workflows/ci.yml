@@ -81,15 +81,17 @@ jobs:
         with:
           persist-credentials: false
       - run: python3 scripts/init_env.py
-      - run: docker compose config --quiet
-      - run: docker compose up --build --wait --wait-timeout 180
+      - run: docker compose -f compose.yaml -f compose.collection-test.yaml --profile monitoring config --quiet
+      - run: docker compose -f compose.yaml -f compose.collection-test.yaml --profile monitoring up --build --wait --wait-timeout 180
       - name: Verify real services
         run: |
           python3 scripts/smoke_http.py
+          python3 scripts/smoke_collection.py
+          python3 scripts/smoke_prometheus.py
           docker compose exec -T backend alembic current
       - name: Diagnostics
         if: failure()
-        run: docker compose ps && docker compose logs --no-color --tail=100
+        run: docker compose -f compose.yaml -f compose.collection-test.yaml --profile monitoring ps && docker compose -f compose.yaml -f compose.collection-test.yaml --profile monitoring logs --no-color --tail=100
       - name: Stop services
         if: always()
-        run: docker compose down
+        run: docker compose -f compose.yaml -f compose.collection-test.yaml --profile monitoring down

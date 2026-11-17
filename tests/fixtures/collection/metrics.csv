@@ -1,0 +1,5 @@
+external_resource_id,metric_name,value,unit,timestamp
+synthetic-vm-1,cpu_usage_cores,250,millicores,2026-01-01T00:00:00Z
+synthetic-vm-1,memory_usage_bytes,512,MiB,2026-01-01T00:00:00Z
+synthetic-pod-uid-1,cpu_usage_cores,0.1,cores,2026-01-01T00:00:00Z
+synthetic-pod-uid-1,memory_usage_bytes,96,MiB,2026-01-01T00:00:00Z

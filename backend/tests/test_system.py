@@ -80,3 +80,15 @@ def test_swagger_and_openapi(client):
     assert "/api/v1/health/live" in paths
     assert "/api/v1/health/ready" in paths
     assert "/api/v1/system/info" in paths
+
+
+def test_collection_cors_allows_explicit_local_post(client):
+    response = client.options(
+        "/api/v1/sources",
+        headers={
+            "Origin": "http://localhost:15173",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:15173"

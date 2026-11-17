@@ -19,6 +19,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 const navigation = [
   { path: '/', label: 'Overview', icon: LayoutDashboard },
   { path: '/resources', label: 'Resources', icon: Box },
+  { path: '/sources', label: 'Sources & imports', icon: Cloud },
   { path: '/recommendations', label: 'Recommendations', icon: Lightbulb },
   { path: '/lab', label: 'Optimization Lab', icon: FlaskConical },
   { path: '/agent', label: 'AI Agent', icon: Bot },
@@ -89,7 +90,7 @@ export function Layout() {
           <div className="safety-note">
             <ShieldCheck size={20} />
             <strong>Your infrastructure. Your control.</strong>
-            <p>Cloud access and automatic changes are not configured.</p>
+            <p>Discovery and imports are read only. You control every connection.</p>
           </div>
           <a href="/docs" target="_blank" rel="noreferrer" className="docs-link">
             API documentation <ArrowUpRight size={16} />
@@ -98,7 +99,7 @@ export function Layout() {
             <span className="workspace-avatar profile-avatar">L</span>
             <div>
               <strong>Local workspace</strong>
-              <span>Application foundation</span>
+              <span>Data collection</span>
             </div>
             <span className="online-dot" />
           </div>

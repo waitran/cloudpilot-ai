@@ -1,6 +1,7 @@
 from alembic import context
 from cloudpilot.core.config import Settings
 from cloudpilot.models.base import Base
+from cloudpilot.modules.collection import models  # noqa: F401
 from sqlalchemy import create_engine, pool
 
 settings = Settings()

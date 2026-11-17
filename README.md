@@ -3,12 +3,13 @@
 Планируемая платформа FinOps: анализирует стоимость облачной инфраструктуры,
 подбирает конфигурации ресурсов и проверяет их на соответствие требованиям нагрузки и SLO.
 
-**Состояние: реализован фундамент этапа 1.** Backend, PostgreSQL и React связаны через
-типизированный API. Overview показывает реальные статусы, будущие FinOps-модули — empty states.
-[Репозиторий](https://github.com/waitran/cloudpilot-ai) приватный;
-[результаты и ограничения](docs/development/stage-1-report.md).
-[CI реализации этапа 1 — success](https://github.com/waitran/cloudpilot-ai/actions/runs/44177692347),
-включая Docker build и запуск Compose.
+**Состояние: этап 2 — сбор данных.** Добавлены реестр источников, read-only Kubernetes
+и Prometheus connectors, CSV ресурсов/метрик/биллинга, durable worker PostgreSQL,
+история заданий, качество данных и страницы Resources / Sources & imports.
+[Запуск, форматы CSV и ограничения](docs/development/collection.md).
+[Отчёт и проверки этапа 2](docs/development/stage-2-report.md).
+[Репозиторий](https://github.com/waitran/cloudpilot-ai) приватный.
+Рекомендации, AI, лаборатория и применение изменений относятся к следующим этапам.
 
 ## Проблема
 
@@ -65,7 +66,7 @@ flowchart TD
 | Исполнение, этапы 7–8 | HPA, Cluster Autoscaler либо Karpenter, Argo Rollouts |
 | Разработка | Git, GitHub Actions; uv, Ruff, pytest, ESLint, Prettier по мере появления кода |
 
-Зависимости этапа 1 установлены и закреплены lock-файлами. Стек последующих этапов
+Зависимости этапов 1–2 установлены и закреплены lock-файлами. Стек последующих этапов
 добавляется после проверки совместимости и необходимости.
 
 ## Локальный запуск

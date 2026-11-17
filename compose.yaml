@@ -7,6 +7,11 @@ x-backend-environment: &backend-environment
   LOG_LEVEL: ${LOG_LEVEL:-INFO}
   DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-cloudpilot}:${POSTGRES_PASSWORD:?Generate .env with scripts/init_env.py}@postgres:5432/${POSTGRES_DB:-cloudpilot}
   CORS_ORIGINS: ${CORS_ORIGINS:-[]}
+  PROMETHEUS_URL: ${PROMETHEUS_URL:-}
+  PROMETHEUS_TOKEN: ${PROMETHEUS_TOKEN:-}
+  KUBE_MODE: ${KUBE_MODE:-disabled}
+  KUBE_CONFIG_FILE: ${KUBE_CONFIG_FILE:-}
+  KUBE_CONTEXT: ${KUBE_CONTEXT:-}
 
 services:
   postgres:
@@ -63,6 +68,41 @@ services:
       start_period: 10s
     stop_grace_period: 20s
 
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment: *backend-environment
+    command: [python, -m, cloudpilot.modules.collection.tasks.worker]
+    depends_on:
+      postgres: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
+    networks: [application]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python, -m, cloudpilot.modules.collection.tasks.worker, --check]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    stop_grace_period: 30s
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: [monitoring]
+    command: [--config.file=/etc/prometheus/prometheus.yml, --storage.tsdb.path=/prometheus, --storage.tsdb.retention.time=14d]
+    ports: ['127.0.0.1:${PROMETHEUS_PORT:-19090}:9090']
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks: [application]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
   frontend:
     build:
       context: .
@@ -83,3 +123,4 @@ networks:
 
 volumes:
   postgres-data:
+  prometheus-data:

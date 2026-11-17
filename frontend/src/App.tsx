@@ -2,6 +2,9 @@ import { Link, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Overview } from './pages/Overview';
 import { Planned } from './pages/Planned';
+import { Resources } from './pages/Resources';
+import { Sources } from './pages/Sources';
+import { ResourceDetails } from './pages/ResourceDetails';
 import { Settings } from './pages/Settings';
 
 export function App() {
@@ -9,7 +12,9 @@ export function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Overview />} />
-        <Route path="resources" element={<Planned page="resources" />} />
+        <Route path="resources" element={<Resources />} />
+        <Route path="resources/:id" element={<ResourceDetails />} />
+        <Route path="sources" element={<Sources />} />
         <Route path="recommendations" element={<Planned page="recommendations" />} />
         <Route path="lab" element={<Planned page="lab" />} />
         <Route path="agent" element={<Planned page="agent" />} />

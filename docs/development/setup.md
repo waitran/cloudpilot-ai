@@ -129,3 +129,8 @@ TEST_DATABASE_URL=postgresql+psycopg://cloudpilot@127.0.0.1:15432/cloudpilot_tes
   `gh auth login --hostname github.com --web` в своём терминале; токен в чат не нужен.
 
 Полные результаты и ограничения: [отчёт этапа 1](stage-1-report.md).
+
+## Этап 2
+
+После обновления выполнить миграции и запустить worker вместе с API. Compose делает это автоматически.
+Инструкции источников, CSV и проверок — в [collection.md](collection.md).

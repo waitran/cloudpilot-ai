@@ -35,7 +35,8 @@ def test_real_postgres_and_migration_roundtrip(postgres_settings):
         with database.engine.connect() as connection:
             assert connection.scalar(text("SELECT current_database()")).endswith("_test")
             assert (
-                connection.scalar(text("SELECT version_num FROM alembic_version")) == "0001_initial"
+                connection.scalar(text("SELECT version_num FROM alembic_version"))
+                == "0002_collection"
             )
         assert database.reachable()
         with database.sessions() as session:
