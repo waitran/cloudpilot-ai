@@ -1,0 +1,55 @@
+# Local environment and secrets (the template is public-safe).
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+credentials.json
+service-account*.json
+.aws/
+.kube/
+secrets/
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage*
+htmlcov/
+*.egg-info/
+
+# JavaScript and build outputs
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Local tools, data, editor and temporary files
+.tools/
+.cache/
+.uv-cache/
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.tmp
+*.log
+*.sqlite*
+*.dump
+*.bak
+tmp/
+artifacts/
