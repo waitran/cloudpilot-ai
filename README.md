@@ -7,6 +7,8 @@
 типизированный API. Overview показывает реальные статусы, будущие FinOps-модули — empty states.
 [Репозиторий](https://github.com/waitran/cloudpilot-ai) приватный;
 [результаты и ограничения](docs/development/stage-1-report.md).
+[CI реализации этапа 1 — success](https://github.com/waitran/cloudpilot-ai/actions/runs/44177692347),
+включая Docker build и запуск Compose.
 
 ## Проблема
 

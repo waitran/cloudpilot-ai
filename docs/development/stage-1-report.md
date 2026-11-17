@@ -41,8 +41,14 @@ HTML/proxy проверены реальными HTTP-запросами; пов
 Локальный Docker daemon недоступен текущему процессу. Попытка rootless-запуска также
 упёрлась в отсутствие uidmap; системные права и настройки не менялись.
 Локальные Docker-сборки и Compose up поэтому не заявляются успешными.
-Их проверяет job containers на GitHub-hosted runner; итог удалённого CI уточняется
-по коммиту реализации после публикации.
+Удалённая проверка завершена успешно:
+[CloudPilot CI #2](https://github.com/waitran/cloudpilot-ai/actions/runs/44177692347),
+коммит реализации `307de61b953aa9c23650a675adaa3e5d9b8a7e17`.
+Все четыре job — repository, backend, frontend, containers — завершились success.
+На GitHub-hosted runner собраны оба Docker-образа, Compose реально поднял PostgreSQL,
+migrate/backend/frontend, health checks прошли, smoke проверил API/Swagger/proxy/SPA.
+Итого: 24 backend-теста, 8 frontend-тестов и 5 регрессионных тестов репозитория прошли.
+Проверенные локальные процессы после проверки штатно остановлены; постоянный сервер не оставлен.
 
 ## Версии
 
