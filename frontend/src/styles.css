@@ -1745,3 +1745,19 @@ button:disabled {
 .offer-fields legend {
   padding: 0 5px;
 }
+
+.data-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #334255;
+  border-radius: 8px;
+  background: #101a28;
+  color: #e5edf5;
+  font-family: monospace;
+  resize: vertical;
+}
+.data-table caption {
+  padding: 16px 12px 8px;
+  text-align: left;
+  font-weight: 600;
+}

@@ -135,6 +135,14 @@ function Report({ result }: { result: Analysis }) {
                       <small>
                         {candidate.direction} · {candidate.headroom_percent}% reserve
                       </small>
+                      {result.baseline_kind === 'pod_requests' && (
+                        <Link
+                          className="text-link"
+                          to={`/capacity?cpu=${Math.round(Number(candidate.proposed.cpu_cores) * 1000)}&memory=${candidate.proposed.memory_bytes}`}
+                        >
+                          Check placement
+                        </Link>
+                      )}
                     </th>
                     <td>
                       {decimal(candidate.proposed.cpu_cores, 'cores')}

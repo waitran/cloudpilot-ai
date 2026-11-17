@@ -1,3 +1,4 @@
+import { Capacity } from './pages/Capacity';
 import { Recommendations } from './pages/Recommendations';
 import { Link, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
@@ -16,6 +17,7 @@ export function App() {
         <Route path="resources" element={<Resources />} />
         <Route path="resources/:id" element={<ResourceDetails />} />
         <Route path="sources" element={<Sources />} />
+        <Route path="capacity" element={<Capacity />} />
         <Route path="recommendations" element={<Recommendations />} />
         <Route path="lab" element={<Planned page="lab" />} />
         <Route path="agent" element={<Planned page="agent" />} />

@@ -16,6 +16,7 @@ from cloudpilot.db.database import Database
 from cloudpilot.modules.collection.api import router as collection_router
 from cloudpilot.modules.collection.connectors.base import CollectionError
 from cloudpilot.modules.collection.middleware import UploadLimitMiddleware
+from cloudpilot.modules.feasibility.api import router as feasibility_router
 from cloudpilot.modules.optimization.api import router as optimization_router
 from cloudpilot.schemas.system import ErrorDetail, ErrorResponse
 
@@ -97,5 +98,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(collection_router)
     app.include_router(optimization_router)
+    app.include_router(feasibility_router)
     app.include_router(router)
     return app

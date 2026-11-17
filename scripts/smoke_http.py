@@ -2,7 +2,8 @@
 
 import json
 import os
-from urllib.request import ProxyHandler, build_opener
+from datetime import UTC, datetime
+from urllib.request import ProxyHandler, Request, build_opener
 
 
 def main() -> None:
@@ -25,6 +26,51 @@ def main() -> None:
     assert json.loads(get(frontend + "/api/v1/system/info")) == info
     assert b"CloudPilot AI" in get(frontend + "/resources")
     print("PASS: liveness, readiness, system info, Swagger, frontend, API proxy and SPA routing")
+    assert b"CloudPilot AI" in get(frontend + "/capacity")
+    scenario = {
+        "additional_replicas": 3,
+        "pod": {"cpu_millicores": 500, "memory_bytes": 536870912},
+        "capacity_deadline_seconds": 180,
+        "snapshot": {
+            "context": "explicit-synthetic-smoke",
+            "namespace": "demo",
+            "observed_at": datetime.now(UTC).isoformat(),
+            "synthetic": True,
+            "inventory_complete": True,
+            "constraints_reviewed": True,
+            "namespace_quota": {},
+            "pod_ips_remaining": 10,
+            "pools_complete": True,
+            "nodes": [
+                {
+                    "name": "demo-node",
+                    "eligible": True,
+                    "allocatable": {"cpu_millicores": 4000, "memory_bytes": 8589934592, "pods": 20},
+                    "occupied": {"cpu_millicores": 1000, "memory_bytes": 2147483648, "pods": 5},
+                }
+            ],
+        },
+    }
+
+    def evaluate(body):
+        request = Request(
+            frontend + "/api/v1/feasibility/evaluate",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        with opener.open(request, timeout=10) as response:
+            return json.load(response)
+
+    report = evaluate(scenario)
+    assert report["status"] == "feasible_now"
+    assert sum(p["replicas"] for p in report["placement"]) == 3
+    scenario["snapshot"]["namespace_quota"] = {"pods": 2}
+    assert evaluate(scenario)["status"] == "infeasible"
+    scenario["snapshot"]["namespace_quota"] = None
+    assert evaluate(scenario)["status"] == "insufficient_data"
+    print(
+        "PASS: feasibility through frontend proxy: placement, quota rejection, incomplete snapshot"
+    )
 
 
 if __name__ == "__main__":

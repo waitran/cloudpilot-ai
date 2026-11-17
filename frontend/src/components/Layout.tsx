@@ -11,6 +11,7 @@ import {
   Lightbulb,
   Menu,
   Settings,
+  Server,
   ShieldCheck,
   X,
 } from 'lucide-react';
@@ -21,6 +22,7 @@ const navigation = [
   { path: '/resources', label: 'Resources', icon: Box },
   { path: '/sources', label: 'Sources & imports', icon: Cloud },
   { path: '/recommendations', label: 'Recommendations', icon: Lightbulb },
+  { path: '/capacity', label: 'Capacity planning', icon: Server },
   { path: '/lab', label: 'Optimization Lab', icon: FlaskConical },
   { path: '/agent', label: 'AI Agent', icon: Bot },
   { path: '/settings', label: 'Settings', icon: Settings },

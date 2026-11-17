@@ -147,6 +147,59 @@ describe('application workspace', () => {
     });
   });
 
+  it('submits a synthetic capacity scenario and displays a scale-out alternative', async () => {
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      const scenario = JSON.parse(String(init?.body));
+      return new Response(
+        JSON.stringify({
+          status: 'scale_out_required',
+          evaluated_at: '2026-11-18T01:00:00Z',
+          scenario,
+          current_slots: 1,
+          current_slots_after_node_loss: 1,
+          nodes: [],
+          placement: [],
+          checks: [
+            {
+              code: 'current_capacity_shortfall',
+              required: '5',
+              available: '1',
+              unit: 'pods',
+              pool: null,
+            },
+          ],
+          scale_options: [
+            {
+              pool: 'large',
+              new_nodes: 1,
+              slots_per_new_node: 6,
+              ready_within_seconds: 180,
+              capacity_after_node_loss: 7,
+              replicas_on_existing_nodes: 1,
+              replicas_on_new_nodes: 4,
+            },
+          ],
+        }),
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    renderApp('/capacity');
+    fireEvent.click(screen.getByRole('button', { name: 'Load synthetic example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check capacity' }));
+    expect(
+      await screen.findByRole('heading', { name: 'Additional nodes required' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('180s')).toBeInTheDocument();
+    expect(screen.getByText('synthetic')).toBeInTheDocument();
+    const call = fetchMock.mock.calls[0];
+    expect(call?.[0]).toBe('/api/v1/feasibility/evaluate');
+    expect(JSON.parse(String(call?.[1]?.body))).toMatchObject({
+      additional_replicas: 5,
+      pod: { cpu_millicores: 500, memory_bytes: 536870912 },
+      snapshot: { synthetic: true, context: 'synthetic-demo' },
+    });
+  });
+
   it('settings reuse centralized API data', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(info))));
     renderApp('/settings');
