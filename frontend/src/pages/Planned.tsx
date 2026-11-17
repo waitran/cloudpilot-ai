@@ -1,23 +1,7 @@
-import { ArrowLeft, Bot, Box, FlaskConical, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Bot, FlaskConical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const content = {
-  resources: {
-    title: 'Resources',
-    subtitle: 'A single view of your infrastructure.',
-    description:
-      'Cloud connections and metric collection will appear here. Once connected, you’ll see actual resource usage, capacity and costs.',
-    stage: 'Stage 2 · Data collection',
-    icon: Box,
-  },
-  recommendations: {
-    title: 'Recommendations',
-    subtitle: 'Better decisions start with real evidence.',
-    description:
-      'Recommendations will be calculated from collected metrics, current pricing and your performance constraints. No estimates are available yet.',
-    stage: 'Stage 3 · Optimization engine',
-    icon: Lightbulb,
-  },
   lab: {
     title: 'Optimization Lab',
     subtitle: 'Test the idea. Protect the outcome.',

@@ -19,13 +19,12 @@ def collector_status(database):
 
 
 def component_statuses(database: Database) -> dict[str, ComponentStatus]:
+    postgres_status = "available" if database.reachable() else "unavailable"
     return {
         "backend": ComponentStatus(status="available"),
-        "postgresql": ComponentStatus(
-            status="available" if database.reachable() else "unavailable"
-        ),
+        "postgresql": ComponentStatus(status=postgres_status),
         "collector": ComponentStatus(status=collector_status(database)),
-        "optimizer": ComponentStatus(status="planned"),
+        "optimizer": ComponentStatus(status=postgres_status),
         "optimization_lab": ComponentStatus(status="planned"),
         "ai_agent": ComponentStatus(status="planned"),
     }

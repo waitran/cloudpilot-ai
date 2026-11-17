@@ -60,21 +60,21 @@ export function Overview() {
       description: 'Your cloud resources, utilization and costs. One clear picture.',
       icon: Box,
       path: '/resources',
-      stage: 'AVAILABLE',
+      stage: 'Available',
     },
     {
       title: 'Smarter recommendations',
       description: 'Find opportunities backed by real metrics and cost analysis.',
       icon: Lightbulb,
       path: '/recommendations',
-      stage: 'STAGE 03',
+      stage: 'Available',
     },
     {
       title: 'Validate before you change',
       description: 'Compare configurations under load. Protect your SLOs.',
       icon: FlaskConical,
       path: '/lab',
-      stage: 'STAGE 06',
+      stage: 'Planned',
     },
   ];
   return (
@@ -249,7 +249,9 @@ export function Overview() {
             <div>
               <h3>Discover opportunities</h3>
               <p>Turn real observations into better decisions.</p>
-              <span className="planned-label">Planned · optimization engine</span>
+              <Link className="text-link" to="/recommendations">
+                Open recommendations
+              </Link>
             </div>
           </div>
           <Link to="/agent" className="text-link">
@@ -259,7 +261,6 @@ export function Overview() {
       </div>
       <div className="section-heading">
         <h2>Built for the way you operate</h2>
-        <span>Coming to your workspace</span>
       </div>
       <div className="module-grid">
         {modules.map(({ title, description, icon: Icon, path, stage }) => (
@@ -270,10 +271,7 @@ export function Overview() {
             </div>
             <h3>{title}</h3>
             <p>{description}</p>
-            <span className="planned-label">
-              {stage}
-              {stage === 'AVAILABLE' ? ' · DATA COLLECTION' : ' · PLANNED'}
-            </span>
+            <span className="planned-label">{stage}</span>
           </Link>
         ))}
       </div>

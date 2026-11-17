@@ -1,7 +1,8 @@
 import os
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from alembic import command
@@ -21,7 +22,7 @@ from cloudpilot.modules.collection.schemas import ResourceInput
 from cloudpilot.modules.collection.services.ingestion import claim
 from cloudpilot.modules.collection.tasks.worker import process_one
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.engine import make_url
 
 pytestmark = pytest.mark.integration
@@ -227,7 +228,6 @@ def test_quality_history_gaps_stale_capacity_and_source_health(collection):
     )
     process_one(database, settings)
     rid = client.get("/api/v1/resources").json()["items"][0]["id"]
-    from uuid import UUID
 
     sid, rid = UUID(sid), UUID(rid)
     end = now() - timedelta(seconds=5)
@@ -312,3 +312,122 @@ def test_prometheus_name_without_uid_cannot_match_csv_inventory(collection):
     assert run(client, job["id"])["records_rejected"] == 1
     with database.sessions() as s:
         assert s.scalar(select(func.count()).select_from(ResourceMetric)) == 0
+
+
+def seed_optimization_resource(collection, pod=False):
+    client, database, settings = collection
+    sid = source(client)
+    kind = "kubernetes_pod" if pod else "virtual_machine"
+    fields = (
+        "cpu_requests,memory_requests_bytes,cpu_limits,memory_limits_bytes"
+        if pod
+        else "cpu_capacity,memory_capacity_bytes"
+    )
+    values = "2,2147483648,2,2147483648" if pod else "4,4294967296"
+    upload(
+        client,
+        sid,
+        "resources",
+        f"external_id,resource_type,name,{fields}\nopt-1,{kind},sample,{values}\n",
+    )
+    process_one(database, settings)
+    resource = client.get("/api/v1/resources").json()["items"][0]
+    at = now() - timedelta(minutes=1)
+
+    with database.sessions.begin() as session:
+        session.add_all(
+            ResourceMetric(
+                resource_id=UUID(resource["id"]),
+                source_id=UUID(sid),
+                metric_name=name,
+                value=peak if hours == 100 else usual,
+                unit=unit,
+                timestamp=at - timedelta(hours=hours),
+                expected_interval_seconds=3600,
+            )
+            for hours in range(169)
+            for name, unit, usual, peak in (
+                ("cpu_usage_cores", "cores", "0.3", "0.8"),
+                ("memory_usage_bytes", "bytes", "134217728", "536870912"),
+            )
+        )
+    return f"/api/v1/optimization/resources/{resource['id']}/analyze"
+
+
+def test_optimizer_returns_pod_candidates_and_refuses_gaps(collection):
+    client, database, _ = collection
+    endpoint = seed_optimization_resource(collection, pod=True)
+    response = client.post(endpoint, json={})
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert result["status"] == "candidates"
+    assert result["is_synthetic"]
+    assert result["baseline_kind"] == "pod_requests"
+    assert result["evidence"]["cpu"]["peak"] == "0.800000000"
+    assert result["evidence"]["cpu"]["p95"] == "0.300000000"
+    assert result["evidence"]["memory"]["samples"] == 169
+    assert len(result["candidates"]) == 3
+    assert all(c["cost"] is None and c["direction"] == "downsize" for c in result["candidates"])
+    assert result["candidates"][1]["proposed"]["cpu_cores"] == "1.04"
+    assert result["candidates"][1]["proposed"]["memory_bytes"] == "704643072"
+    with database.sessions.begin() as s:
+        oldest = s.scalar(
+            select(ResourceMetric.timestamp).order_by(ResourceMetric.timestamp).limit(1)
+        )
+        s.execute(
+            delete(ResourceMetric).where(ResourceMetric.timestamp == oldest + timedelta(hours=48))
+        )
+    incomplete = client.post(endpoint, json={}).json()
+    assert incomplete["status"] == "insufficient_data"
+    assert incomplete["candidates"] == []
+    assert "memory_usage_bytes:gaps" in incomplete["reasons"]
+
+
+def test_optimizer_prices_matching_vm_offers_with_exact_transition_cost(collection):
+    client, _, _ = collection
+    endpoint = seed_optimization_resource(collection)
+    pricing = {
+        "currency": "EUR",
+        "reference": "Synthetic terms for integration test",
+        "hours": 720,
+        "baseline_hourly_rate": "0.12",
+        "baseline_recurring_extra": "10.05",
+        "offers": [
+            {
+                "name": "too small",
+                "cpu_cores": 1,
+                "memory_bytes": 2147483648,
+                "hourly_rate": "0.01",
+            },
+            {
+                "name": "candidate B",
+                "cpu_cores": 2,
+                "memory_bytes": 2147483648,
+                "hourly_rate": "0.02",
+                "transition_cost": "100",
+            },
+            {
+                "name": "candidate A",
+                "cpu_cores": 2,
+                "memory_bytes": 2147483648,
+                "hourly_rate": "0.075",
+                "recurring_extra": "10.05",
+                "transition_cost": "15",
+            },
+        ],
+    }
+    result = client.post(endpoint, json={"pricing": pricing})
+    assert result.status_code == 200, result.text
+    data = result.json()
+    assert data["pricing"]["reference"] == pricing["reference"]
+    assert [c["name"] for c in data["candidates"]] == ["candidate A", "candidate B"]
+    best, expensive = [c["cost"] for c in data["candidates"]]
+    assert Decimal(best["baseline_total"]) == Decimal("96.45")
+    assert Decimal(best["candidate_total"]) == Decimal("79.05")
+    assert Decimal(best["savings"]) == Decimal("17.40")
+    assert Decimal(best["savings_percent"]) == Decimal("18.04")
+    assert Decimal(expensive["savings"]) < 0
+    no_offer = client.post(endpoint, json={"pricing": {**pricing, "offers": pricing["offers"][:1]}})
+    assert no_offer.json()["status"] == "no_candidates"
+    invalid = client.post(endpoint, json={"pricing": {**pricing, "hours": 0}})
+    assert invalid.status_code == 422

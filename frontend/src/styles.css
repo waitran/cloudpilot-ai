@@ -1733,3 +1733,15 @@ button:disabled {
     flex-wrap: wrap;
   }
 }
+
+.offer-fields {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  border: 1px solid #334255;
+  border-radius: 8px;
+  padding: 12px;
+}
+.offer-fields legend {
+  padding: 0 5px;
+}

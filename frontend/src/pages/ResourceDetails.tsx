@@ -110,6 +110,11 @@ export function ResourceDetails() {
                 </p>
               </div>
               <div>
+                {['kubernetes_pod', 'virtual_machine'].includes(r.resource_type) && (
+                  <Link className="secondary-button" to={`/recommendations?resource=${r.id}`}>
+                    Analyze sizing
+                  </Link>
+                )}
                 <Badge value={r.quality.status} />
                 {r.is_synthetic && <Badge value="synthetic" />}
               </div>

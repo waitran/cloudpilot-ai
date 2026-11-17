@@ -1,3 +1,4 @@
+import { Recommendations } from './pages/Recommendations';
 import { Link, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Overview } from './pages/Overview';
@@ -15,7 +16,7 @@ export function App() {
         <Route path="resources" element={<Resources />} />
         <Route path="resources/:id" element={<ResourceDetails />} />
         <Route path="sources" element={<Sources />} />
-        <Route path="recommendations" element={<Planned page="recommendations" />} />
+        <Route path="recommendations" element={<Recommendations />} />
         <Route path="lab" element={<Planned page="lab" />} />
         <Route path="agent" element={<Planned page="agent" />} />
         <Route path="settings" element={<Settings />} />
