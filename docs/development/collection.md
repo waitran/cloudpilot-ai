@@ -149,8 +149,8 @@ billing по source/external_record_id. При отсутствии billing ID �
 
 Шаблоны: `tests/fixtures/collection/{resources,metrics,billing}.csv` — явно **синтетические**.
 Для них создать источник с `is_synthetic=true`, scope например `demo`, загрузить resources,
-metrics, billing по очереди. Время fixture фиксированное: ожидаются stale и insufficient_history,
-это не показания работающей инфраструктуры. Никакой файл не импортируется при старте.
+metrics, billing по очереди. Время fixture фиксированное: данные вне 8-дневного окна оцениваются как unavailable
+и insufficient_history, это не показания работающей инфраструктуры. Никакой файл не импортируется при старте.
 
 ## Очередь и качество
 

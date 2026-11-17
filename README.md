@@ -8,6 +8,8 @@
 история заданий, качество данных и страницы Resources / Sources & imports.
 [Запуск, форматы CSV и ограничения](docs/development/collection.md).
 [Отчёт и проверки этапа 2](docs/development/stage-2-report.md).
+[CI этапа 2 — success](https://github.com/waitran/cloudpilot-ai/actions/runs/44191771451),
+включая Compose, большой CSV через Nginx и настоящий Prometheus.
 [Репозиторий](https://github.com/waitran/cloudpilot-ai) приватный.
 Рекомендации, AI, лаборатория и применение изменений относятся к следующим этапам.
 

@@ -19,8 +19,11 @@
   после возврата БД readiness снова 200.
 
 Локально PostgreSQL 14.24 и Python 3.12; CI использует PostgreSQL 17. Docker daemon в
-среде недоступен, поэтому Docker build/Compose и настоящий Prometheus проверяются отдельным
-CI job. `compose.collection-test.yaml` включает исключительно синтетический exporter,
+среде недоступен; Docker build/Compose и настоящий Prometheus успешно проверены удалённо:
+[CI 44191771451](https://github.com/waitran/cloudpilot-ai/actions/runs/44191771451),
+реализация `8ae7b491b0f432c339f52120e371fea0c090033a`. Все четыре job — success
+(repository, backend, frontend, containers). Проверены загрузка CSV больше 1 MiB через
+Nginx, durable worker, PostgreSQL 17 и CPU/RAM через query/query_range настоящего Prometheus. `compose.collection-test.yaml` включает исключительно синтетический exporter,
 настоящий Prometheus и read-only сбор через query/query_range; этот override не используется
 обычным запуском. Результат удалённого запуска относится к конкретному commit в GitHub Actions.
 
