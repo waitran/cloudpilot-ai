@@ -14,6 +14,7 @@
 - 5 проверок repository checker; Ruff lint/format, ESLint, Prettier, TypeScript и Vite build.
 - Настоящий HTTP сценарий: PostgreSQL + API + отдельный worker + Vite proxy, CSV загрузки,
   чтение inventory/quality/billing, повторный импорт без дубликатов и heartbeat worker.
+  Smoke отправляет CSV через frontend proxy, включая файл больше 1 MiB.
 - Остановка настоящей БД: readiness 503, liveness 200, system info unavailable;
   после возврата БД readiness снова 200.
 

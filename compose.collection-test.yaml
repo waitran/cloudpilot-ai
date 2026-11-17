@@ -19,4 +19,8 @@ services:
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
     healthcheck:
-      disable: true
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9100/metrics', timeout=2)"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
