@@ -3,10 +3,10 @@
 Планируемая платформа FinOps: анализирует стоимость облачной инфраструктуры,
 подбирает конфигурации ресурсов и проверяет их на соответствие требованиям нагрузки и SLO.
 
-**Состояние: локальная подготовка этапа 0. Приложение ещё не реализовано.**
-Созданы структура, документация и проверки репозитория. Публикация GitHub и первый запуск CI
-остаются открытыми; фактические ограничения описаны в [отчёте](docs/development/stage-0-report.md).
-Значка успешного CI пока нет.
+**Состояние: реализован фундамент этапа 1.** Backend, PostgreSQL и React связаны через
+типизированный API. Overview показывает реальные статусы, будущие FinOps-модули — empty states.
+[Репозиторий](https://github.com/waitran/cloudpilot-ai) приватный;
+[результаты и ограничения](docs/development/stage-1-report.md).
 
 ## Проблема
 
@@ -63,34 +63,40 @@ flowchart TD
 | Исполнение, этапы 7–8 | HPA, Cluster Autoscaler либо Karpenter, Argo Rollouts |
 | Разработка | Git, GitHub Actions; uv, Ruff, pytest, ESLint, Prettier по мере появления кода |
 
-Зависимости приложения ещё не устанавливались. Точные версии и lock-файлы появятся
-на соответствующих этапах после проверки совместимости.
+Зависимости этапа 1 установлены и закреплены lock-файлами. Стек последующих этапов
+добавляется после проверки совместимости и необходимости.
 
-## Локальная работа сейчас
+## Локальный запуск
 
-Нужны Git и Python 3.12. Docker, Node.js и сторонние Python-пакеты для этапа 0 не требуются.
-Запускать команды из корня `cloudpilot-ai`:
+Нужны Docker с доступным daemon, Compose и Python для генерации локального окружения:
 
 ```bash
-python3.12 scripts/check_repository.py
-python3.12 -m unittest discover -s tests -v
-git diff --check
+python3.12 scripts/init_env.py
+docker compose up --build --wait --wait-timeout 180
 ```
 
-Альтернатива: `make check test`. Скрипт проверяет структуру, конфигурации, ссылки,
-Python-синтаксис и признаки секретов в рабочих файлах и в индексе Git.
-Проверки исполняются без скачивания пакетов и обращения к облаку.
-Backend, UI и Docker Compose пока запустить нельзя: их реализация относится к этапу 1.
+Открыть [Frontend](http://127.0.0.1:15173), [Backend](http://127.0.0.1:18080),
+[Swagger](http://127.0.0.1:18080/docs). PostgreSQL не публикуется на host.
+Порты настраиваются в `.env`; они привязаны только к loopback.
 
-Подробнее: [настройка окружения](docs/development/setup.md),
-[вклад в проект](CONTRIBUTING.md), [план проверок](docs/development/quality.md).
+Доступны `make up`, `make down`, `make logs`, `make migrate`, `make status`,
+`make check`, `make test`, `make smoke`. Генератор создаёт случайный локальный пароль,
+не перезаписывает существующий `.env` и не выводит секреты.
+
+Для нативной разработки: Python 3.12 + uv, Node.js 24 + npm 12, доступный PostgreSQL.
+Версии зависимостей закреплены lock-файлами. Полные команды, отдельная тестовая БД и
+устранение проблем описаны в [setup.md](docs/development/setup.md).
+
+Реализованные API: `/api/v1/health/live`, `/api/v1/health/ready`, `/api/v1/system/info`.
+Нет сборщиков облачных метрик, расчётов экономии, LLM или инфраструктурной записи.
+[Проверки качества](docs/development/quality.md), [участие в разработке](CONTRIBUTING.md).
 
 ## Дорожная карта
 
 | Этап | Результат | Статус |
 | --- | --- | --- |
-| 0 | Workspace, Git, GitHub, документация, CI | Локально готово; GitHub/CI заблокированы окружением |
-| 1 | Backend, Frontend, PostgreSQL, Docker Compose | Запланирован |
+| 0 | Workspace, Git, GitHub, документация, CI | Завершён; private GitHub и CI проверены |
+| 1 | Backend, Frontend, PostgreSQL, Docker Compose | Реализован; ограничения запуска в отчёте |
 | 2 | Сбор и нормализация метрик | Запланирован |
 | 3 | Optimization Engine и расчёт стоимости | Запланирован |
 | 4 | Feasibility Engine и Capacity Planner | Запланирован |

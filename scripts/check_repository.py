@@ -13,17 +13,37 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_DIRS = (
-    "backend", "frontend", "infrastructure/docker", "infrastructure/kubernetes",
-    "infrastructure/monitoring", "tests", "scripts", "docs/architecture",
-    "docs/development", "docs/decisions", ".github/workflows",
+    "backend",
+    "frontend",
+    "infrastructure/docker",
+    "infrastructure/kubernetes",
+    "infrastructure/monitoring",
+    "tests",
+    "scripts",
+    "docs/architecture",
+    "docs/development",
+    "docs/decisions",
+    ".github/workflows",
 )
 REQUIRED_FILES = (
-    "README.md", "CONTRIBUTING.md", ".env.example", ".gitignore", ".editorconfig",
-    ".python-version", ".nvmrc", ".prettierrc.json", "ruff.toml", "Makefile",
-    ".github/workflows/ci.yml", "docs/architecture/overview.md",
-    "docs/architecture/components.md", "docs/architecture/security.md",
-    "docs/development/setup.md", "docs/development/roadmap.md",
-    "docs/development/quality.md", "docs/development/stage-0-report.md",
+    "README.md",
+    "CONTRIBUTING.md",
+    ".env.example",
+    ".gitignore",
+    ".editorconfig",
+    ".python-version",
+    ".nvmrc",
+    ".prettierrc.json",
+    "ruff.toml",
+    "Makefile",
+    ".github/workflows/ci.yml",
+    "docs/architecture/overview.md",
+    "docs/architecture/components.md",
+    "docs/architecture/security.md",
+    "docs/development/setup.md",
+    "docs/development/roadmap.md",
+    "docs/development/quality.md",
+    "docs/development/stage-0-report.md",
     "docs/decisions/0001-modular-monolith.md",
 )
 SECRET_PATTERNS = {
@@ -32,7 +52,7 @@ SECRET_PATTERNS = {
     "AWS access key": re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b"),
     "credential URL": re.compile(r"[a-z][a-z0-9+.-]*://[^\s/:@]+:[^\s/@]+@", re.I),
     "assigned secret": re.compile(
-        r"(?im)^[ \t]*(?:[A-Z_]*(?:API_KEY|TOKEN|PASSWORD|SECRET))[ \t]*=[ \t]*[^\s#\"']+"
+        r"(?m)^[ \t]*(?:[A-Z_]*(?:API_KEY|TOKEN|PASSWORD|SECRET))[ \t]*=[ \t]*[^\s#\"']+"
     ),
 }
 LOCAL_LINK = re.compile(r"!?\[[^\]\n]*\]\(([^\s)]+)\)")
@@ -95,14 +115,25 @@ def check_text(name: str, raw: bytes, label: str, errors: list[str]) -> None:
 
 def check_ignore(errors: list[str]) -> None:
     protected = (
-        ".env", ".env.production", "backend/.env", "local.pem", "local.key",
-        ".venv/bin/python", "frontend/node_modules/package/index.js",
-        "infrastructure/live.tfstate", "infrastructure/local.tfvars", ".kube/config",
-        ".aws/credentials", "secrets/local.json", "credentials.json",
+        ".env",
+        ".env.production",
+        "backend/.env",
+        "local.pem",
+        "local.key",
+        ".venv/bin/python",
+        "frontend/node_modules/package/index.js",
+        "infrastructure/live.tfstate",
+        "infrastructure/local.tfvars",
+        ".kube/config",
+        ".aws/credentials",
+        "secrets/local.json",
+        "credentials.json",
     )
     result = subprocess.run(
         ["git", "-C", str(ROOT), "check-ignore", "--no-index", "--stdin", "-z"],
-        input="\0".join(protected).encode() + b"\0", capture_output=True, check=False,
+        input="\0".join(protected).encode() + b"\0",
+        capture_output=True,
+        check=False,
     )
     if result.returncode not in {0, 1}:
         errors.append("git check-ignore failed")
@@ -113,7 +144,8 @@ def check_ignore(errors: list[str]) -> None:
             errors.append(f".gitignore: missing protection for {name}")
     example = subprocess.run(
         ["git", "-C", str(ROOT), "check-ignore", "--no-index", ".env.example"],
-        capture_output=True, check=False,
+        capture_output=True,
+        check=False,
     )
     if example.returncode != 1:
         errors.append(".env.example must not be ignored")
@@ -131,10 +163,15 @@ def main() -> int:
         toplevel = Path(git("rev-parse", "--show-toplevel").decode().strip()).resolve()
         if toplevel != ROOT:
             errors.append("project must have an independent Git repository")
-        names = sorted(set(
-            git("ls-files", "--cached", "--others", "--exclude-standard", "-z")
-            .decode().strip("\0").split("\0")
-        ) - {""})
+        names = sorted(
+            set(
+                git("ls-files", "--cached", "--others", "--exclude-standard", "-z")
+                .decode()
+                .strip("\0")
+                .split("\0")
+            )
+            - {""}
+        )
         if not names:
             errors.append("no repository files found")
         for name in names:

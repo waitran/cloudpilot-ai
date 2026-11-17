@@ -1,84 +1,131 @@
-# Локальное окружение
+# Запуск CloudPilot AI
 
-## Этап 0
+## Через Docker Compose
 
-Требуются Git и Python 3.12. Системный Python Ubuntu менять не нужно.
-uv уже обнаружил установленный пользовательский Python 3.12.16; `python3` указывает на 3.10.12.
-Используйте `python3.12`, не `python3`, либо выберите подходящий интерпретатор в IDE.
+Нужны Docker с доступным daemon и Compose v2+. Python 3.12 нужен для генерации локального
+окружения; можно использовать `python3`, если это Python 3.10+ для одного init-скрипта.
 
-```bash
-python3.12 --version
-make check test
-```
-
-Если интерпретатор отсутствует и сеть доступна: `uv python install 3.12`.
-В ограниченном окружении кеш uv можно направить в доступную директорию:
-`UV_CACHE_DIR=/tmp/cloudpilot-uv-cache uv python list --only-installed`.
-Виртуальное окружение и зависимости приложения создаются на этапе 1.
-
-## Инструменты для следующих этапов
-
-- Node.js: `.nvmrc` задаёт 24 LTS. Текущий Node 20.20.2 формально соответствует минимальному
-  требованию Vite, но для нового проекта выбран поддерживаемый LTS. Установите через уже
-  используемый менеджер Node или официальный архив с проверкой checksum. Глобальный Node не заменять.
-- Docker/Compose установлены. `docker info` сейчас возвращает permission denied.
-  Для этапа 0 daemon не нужен. Для этапа 1 настройте rootless Docker либо попросите администратора
-  выдать доступ; членство в группе docker даёт широкие права. Не используйте `chmod 666` для сокета.
-- GitHub CLI отсутствует. Безопасный вариант без sudo — официальный Linux x86_64 архив из
-  релиза `cli/cli`, проверка SHA256 по release checksums и распаковка в пользовательский `~/.local`.
-  Не запускайте непроверенные установочные скрипты через pipe в shell.
-- ripgrep необязателен; в текущем окружении отсутствует.
-
-## Завершение GitHub-публикации
-
-В текущем терминале DNS `api.github.com` не работает, поэтому скачать `gh`, проверить его
-авторизацию, создать репозиторий и выполнить push невозможно. Наличие старого конфигурационного
-файла `gh` не доказывает действующую авторизацию. Токены в чат передавать не нужно.
-
-После установки `gh` и восстановления сети из корня проекта:
+Из корня проекта:
 
 ```bash
-gh auth status
-# Только если авторизации нет:
-gh auth login --hostname github.com --git-protocol https --web
+python3.12 scripts/init_env.py
+docker compose config --quiet
+docker compose up --build --wait --wait-timeout 180
 ```
 
-Далее выполните команды последовательно. Остановитесь при любой ошибке.
+Либо `make up`. Генератор создаёт приватный `.env` с новым случайным паролем и не меняет
+существующий файл. Не коммитьте его. Миграции запускаются одноразовым сервисом `migrate`;
+backend ждёт успешного завершения миграций и готовности PostgreSQL.
+
+| Назначение | Адрес по умолчанию |
+| --- | --- |
+| Frontend | http://127.0.0.1:15173 |
+| Backend | http://127.0.0.1:18080 |
+| Swagger | http://127.0.0.1:18080/docs |
+| OpenAPI | http://127.0.0.1:18080/openapi.json |
+| PostgreSQL | Только сеть Compose; host-порта нет |
+
+Host-порты привязаны к loopback. Настройки `FRONTEND_PORT`, `BACKEND_PORT` в `.env`
+позволяют избежать конфликтов. Чужие процессы останавливать не нужно.
+При смене frontend-порта обновите `CORS_ORIGINS`, если обращаетесь к API напрямую.
+Через same-origin proxy CORS вообще не требуется. Переменная `DATABASE_URL` в `.env`
+нужна для нативной разработки: в Compose она заменяется внутренним адресом `postgres:5432`.
+
+## Управление
+
+| Команда | Действие |
+| --- | --- |
+| `make up` | Сборка, миграции, запуск и ожидание health checks |
+| `make down` | Остановка; volume PostgreSQL сохраняется |
+| `make logs` | Логи приложения |
+| `make restart` | Перезапуск backend/frontend |
+| `make migrate` | Явный запуск `alembic upgrade head` |
+| `make status` | Состояние контейнеров |
+| `make smoke` | Реальные HTTP-проверки запущенного приложения |
+
+Сервис `migrate` после успеха имеет состояние Exited (0) — это штатно.
+Не удаляйте volume для устранения обычных проблем запуска: там находятся данные.
+Не запускайте `docker compose config` без `--quiet` в общедоступном логе: он раскрывает
+подставленные переменные окружения.
+
+## Нативная разработка
+
+Нужны Python 3.12, uv 0.13.8, Node.js 24 и npm 12.2.2. Используйте пользовательский
+менеджер версий Node и `.nvmrc`; системные Python/Node менять не нужно.
+Версии библиотек зафиксированы в `backend/uv.lock` и `frontend/package-lock.json`.
 
 ```bash
-owner=$(gh api user --jq .login)
-gh repo view "$owner/cloudpilot-ai" --json nameWithOwner,isPrivate,url
+python3.12 scripts/init_env.py
+uv sync --project backend --locked
+cd frontend
+npm ci
+cd ..
 ```
 
-Если репозиторий найден — изучите его содержимое и историю, ничего не перезаписывайте.
-Продолжать следующий блок можно **только** при подтверждённом отсутствии репозитория
-(HTTP 404 при действующей авторизации). Ошибки сети/доступа не означают отсутствие репозитория.
+Нужен работающий PostgreSQL (проверено на 14.24; Compose/CI используют 17).
+Создайте БД `cloudpilot` и отдельную `cloudpilot_test` с локальными credentials.
+Укажите реальный `DATABASE_URL` в `.env`. Генератор предполагает PostgreSQL на
+`127.0.0.1:15432`; поменяйте адрес при другой установке.
+
+В первом терминале:
 
 ```bash
-make check test
-git status --short --branch
-git remote -v
-# Убедитесь, что origin ещё отсутствует; репозиторий с таким именем не существует.
-gh repo create "$owner/cloudpilot-ai" --private --source=. --remote=origin
-git push -u origin main
-gh repo view "$owner/cloudpilot-ai" --json nameWithOwner,isPrivate,url
-git ls-remote origin refs/heads/main
-git rev-parse HEAD
-gh run list --branch main --limit 5
+cd backend
+uv run alembic upgrade head
+uv run uvicorn cloudpilot.main:create_app --factory --host 127.0.0.1 --port 18080
 ```
 
-Сравните SHA удалённой main и HEAD. Найдите CI run именно этого SHA, затем
-`gh run watch RUN_ID --exit-status` и при ошибке `gh run view RUN_ID --log-failed`.
-Удалённый этап завершён только после проверки private-видимости, совпадения SHA и результата CI.
-Не используйте force push. После публикации обновите текущий статус README и отчёт этапа 0.
+Во втором терминале:
 
-## Первичные источники
+```bash
+cd frontend
+npm run dev
+```
 
-- [GitHub CLI: установка](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
-- [GitHub CLI: авторизация](https://cli.github.com/manual/gh_auth_login)
-- [GitHub CLI: создание репозитория](https://cli.github.com/manual/gh_repo_create)
-- [uv: установка Python](https://docs.astral.sh/uv/guides/install-python/)
-- [Node.js: поддерживаемые релизы](https://nodejs.org/en/about/previous-releases)
-- [Vite: требования](https://vite.dev/guide/)
-- [actions/checkout v7.0.1](https://github.com/actions/checkout/releases/tag/v7.0.1)
-- [actions/setup-python v7.1.0](https://github.com/actions/setup-python/releases/tag/v7.1.0)
+Vite проксирует `/api`, `/docs` и `/openapi.json` на `127.0.0.1:18080`.
+Для другого backend используйте `API_PROXY_TARGET` при запуске Vite.
+Для отдельного origin API можно задать `VITE_API_BASE_URL` на этапе сборки;
+в переменные `VITE_*` запрещено помещать секреты — они попадают в JS клиента.
+
+## Проверки
+
+```bash
+make check
+make test
+cd frontend
+npm run build
+npm audit
+npm audit --omit=dev
+```
+
+Backend-интеграции требуют `TEST_DATABASE_URL`, указывающий на отдельную БД с именем,
+оканчивающимся на `_test`. Они выполняют upgrade/downgrade и не должны использовать рабочую БД.
+Без переменной эти два теста явно пропускаются. Пример с URL без пароля — только если ваш
+локальный PostgreSQL уже настроен на доверенную локальную аутентификацию:
+
+```bash
+TEST_DATABASE_URL=postgresql+psycopg://cloudpilot@127.0.0.1:15432/cloudpilot_test uv run --project backend pytest backend/tests
+```
+
+Для конфигурации с паролем передайте URL через закрытое окружение вашего терминала,
+не публикуйте его в чатах и логах. В CI все интеграционные тесты обязательны и выполняются
+на отдельной PostgreSQL service database.
+
+## Типичные проблемы
+
+- `Docker permission denied`: текущий процесс не имеет доступа к daemon. Проверяйте права
+  своего пользователя или используйте предварительно настроенный rootless Docker.
+  Не открывайте сокет через `chmod 666`. В этой среде rootless-запуск также ограничен отсутствием uidmap.
+- Порт занят: смените host-порт в `.env`; не завершайте чужой процесс.
+- Readiness 503: PostgreSQL недоступен. Liveness продолжит отвечать 200; Overview покажет
+  проблему подключения. Проверьте credentials и состояние БД.
+- Смена пароля в `.env` не меняет пароль уже инициализированного PostgreSQL volume.
+  Обновляйте его средствами PostgreSQL, сохраняя данные.
+- Ошибка миграции: изучите `docker compose logs migrate`, затем исправьте причину и выполните
+  `make migrate`. Не скрывайте ошибку и не продолжайте запуск с неподготовленной схемой.
+- В ограниченной среде кеши могут быть read-only: задайте `UV_CACHE_DIR` и `npm_config_cache`
+  внутри доступной временной директории. Это не меняет lock-файлы.
+- CLI GitHub может иметь истёкшую авторизацию. Для обычного push выполните стандартный
+  `gh auth login --hostname github.com --web` в своём терминале; токен в чат не нужен.
+
+Полные результаты и ограничения: [отчёт этапа 1](stage-1-report.md).

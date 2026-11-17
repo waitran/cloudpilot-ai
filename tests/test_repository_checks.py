@@ -17,8 +17,18 @@ class RepositoryChecksTest(unittest.TestCase):
         self.root = Path(self.temp.name) / "repo"
         self.root.mkdir()
         result = subprocess.run(
-            ["git", "-C", str(ROOT), "ls-files", "--cached", "--others",
-             "--exclude-standard", "-z"], check=True, capture_output=True,
+            [
+                "git",
+                "-C",
+                str(ROOT),
+                "ls-files",
+                "--cached",
+                "--others",
+                "--exclude-standard",
+                "-z",
+            ],
+            check=True,
+            capture_output=True,
         )
         for name in set(result.stdout.decode().strip("\0").split("\0")) - {""}:
             source = ROOT / name
@@ -31,13 +41,17 @@ class RepositoryChecksTest(unittest.TestCase):
 
     def git(self, *args: str) -> None:
         subprocess.run(
-            ["git", "-C", str(self.root), *args], check=True, capture_output=True,
+            ["git", "-C", str(self.root), *args],
+            check=True,
+            capture_output=True,
         )
 
     def run_checker(self) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [sys.executable, str(self.root / "scripts/check_repository.py")],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
 
     def test_clean_repository_passes(self) -> None:
